@@ -26,7 +26,7 @@ bp_low = 0.5
 bp_upp = 6
 electrode_num = 16
 # Change the following directory to your own one.
-parent_dir = '/Users/tma33/Library/CloudStorage/OneDrive-EmoryUniversity/Emory/Rollins SPH/2025/BIOS-584/python_proj'
+parent_dir = 'C:\\Users\\lucyy\\Documents\\GitHub\\BIOS_584'
 parent_data_dir = '{}/data'.format(parent_dir)
 time_index = np.linspace(0, 800, 25)
 electrode_name_ls = ['F3', 'Fz', 'F4', 'T7', 'C3', 'Cz', 'C4', 'T8', 'CP3', 'CP4', 'P3', 'Pz', 'P4', 'PO7', 'PO8', 'Oz']
@@ -60,7 +60,15 @@ eeg_trn_type = np.squeeze(eeg_trn_type, axis=1)
 # Write your own code below:
 
 
+frt_data_name = f"{subject_name}_001_BCI_FRT_Truncated_Data_{bp_low}_{bp_upp}"
+frt_data_dir = f"{parent_data_dir}/{frt_data_name}.mat"
 
+eeg_frt_obj = sio.loadmat(frt_data_dir)
+eeg_frt_signal = eeg_frt_obj['Signal']
+eeg_frt_type = np.squeeze(eeg_frt_obj['Type'], axis=1)
+
+print(eeg_frt_signal.shape)
+print(eeg_frt_type.shape)
 
 # You have completed the exploratory data analysis in HW7 and HW8.
 # The dataset has been carefully reviewed by Dr. Jane E. Huggins,
@@ -75,8 +83,17 @@ eeg_trn_type = np.squeeze(eeg_trn_type, axis=1)
 # except for LogisticRegression: set max_iter=1000
 # Write your own code below:
 
+# Logistic Regression
+logistic_model = LR(max_iter=1000)
+logistic_model.fit(eeg_trn_signal, eeg_trn_type)
 
+# LDA
+lda_model = LDA()
+lda_model.fit(eeg_trn_signal, eeg_trn_type)
 
+# SVM
+svm_model = SVC(probability=True)
+svm_model.fit(eeg_trn_signal, eeg_trn_type)
 
 
 # Step 3: Evaluate model performance on both TRN and FRT files
@@ -87,8 +104,9 @@ eeg_trn_type = np.squeeze(eeg_trn_type, axis=1)
 # denoted as logistic_y_trn, lda_y_trn, and svm_y_trn.
 # Write your own code below:
 
-
-
+logistic_y_trn = logistic_model.predict_proba(eeg_trn_signal)[:, 1].reshape(-1, 1)
+lda_y_trn = lda_model.predict_proba(eeg_trn_signal)[:, 1].reshape(-1, 1)
+svm_y_trn = svm_model.predict_proba(eeg_trn_signal)[:, 1].reshape(-1, 1)
 
 
 # Step 3.2: Prediction accuracy on FRT files
@@ -96,14 +114,16 @@ eeg_trn_type = np.squeeze(eeg_trn_type, axis=1)
 # denoted as logistic_y_frt, lda_y_frt, and svm_y_frt.
 # Write your own code below:
 
-
+logistic_y_frt = logistic_model.predict_proba(eeg_frt_signal)[:, 1].reshape(-1, 1)
+lda_y_frt = lda_model.predict_proba(eeg_frt_signal)[:, 1].reshape(-1, 1)
+svm_y_frt = svm_model.predict_proba(eeg_frt_signal)[:, 1].reshape(-1, 1)
 
 
 
 # Step 4: Convert binary classification probability to character-level accuracy
 # This involves advanced data manipulation, so you do not need to write any new code.
 # Please run the following code to view the final results.
-'''
+
 eeg_trn_code = eeg_trn_obj['Code']
 eeg_frt_code = eeg_frt_obj['Code']
 char_frt = convert_raw_char_to_alphanumeric_stype(eeg_frt_obj['Text'])
